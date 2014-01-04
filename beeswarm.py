@@ -5,15 +5,18 @@ import pandas
 import numpy
 
 def beeswarm(values, positions=None, method="swarm",
-             ax=None, s=20, col="black", xlim=None, ylim=None):
+             ax=None, s=20, col="black", xlim=None, ylim=None,
+             plot=True):
     if ax is None:
         fig = matplotlib.pyplot.figure()
         ax = fig.add_subplot(111)
 
-    # Get axis limits
-    yvals = list(itertools.chain.from_iterable(values))
     if positions is None:
         positions = range(len(values))
+    yvals = list(itertools.chain.from_iterable(values))
+    xvals = list(itertools.chain.from_iterable([[positions[i]]*len(values[i]) for i in range(len(values))]))
+
+    # Get axis limits
     if xlim is not None:
         ax.set_xlim(left=xlim[0], right=xlim[1])
     else:
@@ -48,10 +51,22 @@ def beeswarm(values, positions=None, method="swarm",
                 colors.extend([col[i]]*len(values[i]))
         elif len(col) == len(yvals):
             colors = col
+        else:
+            colors = col*(len(yvals)/len(col)) # hope for the best
+            if len(colors) < len(yvals):
+                colors.extend(col[0:(len(yvals)-len(colors))])
+    else:
+        sys.stderr.write("ERROR: Invalid argument for col\n")
+        return
 
+    
+    bs = pandas.DataFrame({"xorig": xvals, "y": yvals})
+    bs = pandas.merge(bs, _beeswarm(positions, values, xsize=xsize, ysize=ysize), on=["xorig","y"])
+    bs["color"] = colors
     # jitter points
-    bs = _beeswarm(positions, values, xsize=xsize, ysize=ysize)
-    ax.scatter(bs["xnew"], bs["ynew"], color=col)
+    if plot:
+        ax.scatter(bs["xnew"], bs["y"], color=colors)
+    return bs;
 
 def _beeswarm(positions, values, method="swarm", xsize=0, ysize=0):
     """
@@ -71,7 +86,7 @@ def _beeswarm(positions, values, method="swarm", xsize=0, ysize=0):
     else:
         xnew = None # not implemented
         ynew = None
-    out = pandas.DataFrame({"xnew":xnew,"ynew":ynew,"xorig":xorig})
+    out = pandas.DataFrame({"xnew":xnew,"y":ynew,"xorig":xorig})
     return out
 
 def swarm(x, xsize=0, ysize=0):
