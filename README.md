@@ -13,6 +13,14 @@ sudo setup.py install
 
 To test that it worked, open up python and check that ```import beeswarm``` doesn't give you any errors.
 
+## Requirements ##
+
+This package requires:
+
+* matplotlib
+* numpy
+* pandas
+
 ## Basic usage ##
 
 There is only one function, ```beeswarm```:
@@ -73,4 +81,4 @@ d2 = np.random.normal(size=100)
 bs, ax = beeswarm([d1,d2], method="swarm", labels=["sample 1", "sample 2"], col=["blue","red"])
 ```
 
-More details [here](http://melissagymrek.com/blog/2014/01/04/python-beeswarm.html)
+More details [here](http://melissagymrek.com/blog/2014/01/04/python-beeswarm.html).

@@ -45,19 +45,44 @@ def beeswarm(values, positions=None, method="swarm",
          * bs: pandas.DataFrame with columns: xorig, yorig, xnew, ynew, color
          * ax: the axis used for plotting
     """
-    if ax is None:
-        fig = matplotlib.pyplot.figure()
-        ax = fig.add_subplot(111)
-
+    # Check things before we go on
+    if method not in ["swarm", "hex", "center", "square"]:
+        sys.stderr.write("ERROR: Invalid method.\n")
+        return
     if len(values) == 0: return None
     if not hasattr(values[0], "__len__"): values = [values]
-
     if positions is None:
         positions = range(len(values))
+    else:
+        if len(positions) != len(values): 
+            sys.stderr.write("ERROR: number of positions must match number of groups\n")
+            return None
+
     yvals = list(itertools.chain.from_iterable(values))
     xvals = list(itertools.chain.from_iterable([[positions[i]]*len(values[i]) for i in range(len(values))]))
 
+    # Get color vector
+    if type(col) == str:
+        colors = [col]*len(yvals)
+    elif type(col) == list:
+        if len(col) == len(positions):
+            colors = []
+            for i in range(len(col)):
+                colors.extend([col[i]]*len(values[i]))
+        elif len(col) == len(yvals):
+            colors = col
+        else:
+            colors = col*(len(yvals)/len(col)) # hope for the best
+            if len(colors) < len(yvals):
+                colors.extend(col[0:(len(yvals)-len(colors))])
+    else:
+        sys.stderr.write("ERROR: Invalid argument for col\n")
+        return
+
     # Get axis limits
+    if ax is None:
+        fig = matplotlib.pyplot.figure()
+        ax = fig.add_subplot(111)
     if xlim is not None:
         ax.set_xlim(left=xlim[0], right=xlim[1])
     else:
@@ -82,24 +107,6 @@ def beeswarm(values, positions=None, method="swarm",
     xsize=math.sqrt(s)*1.0/72*xran*1.0/(w*0.8)
     ysize=math.sqrt(s)*1.0/72*yran*1.0/(h*0.8)
 
-    # Get color vector
-    if type(col) == str:
-        colors = [col]*len(yvals)
-    elif type(col) == list:
-        if len(col) == len(positions):
-            colors = []
-            for i in range(len(col)):
-                colors.extend([col[i]]*len(values[i]))
-        elif len(col) == len(yvals):
-            colors = col
-        else:
-            colors = col*(len(yvals)/len(col)) # hope for the best
-            if len(colors) < len(yvals):
-                colors.extend(col[0:(len(yvals)-len(colors))])
-    else:
-        sys.stderr.write("ERROR: Invalid argument for col\n")
-        return
-
     bs = pandas.DataFrame({"xorig": xvals, "yorig": yvals})
 
     # Get new arrangements
@@ -114,7 +121,7 @@ def beeswarm(values, positions=None, method="swarm",
     ax.set_xticks(positions)
     if labels is not None:
         ax.set_xticklabels(labels)
-    return bs, ax;
+    return bs, ax
 
 def unsplit(x,f):
     """
@@ -156,7 +163,8 @@ def grid(x, ylim, xsize=0, ysize=0, method="hex"):
             else:
                 v_s[item] = map(lambda a: a - math.ceil(numpy.mean(vals)) + 0.25, vals)
         else:
-            sys.stderr.write("ERROR: Invalid method.")
+            sys.stderr.write("ERROR: this block should never execute.\n")
+            return
     x_index = unsplit(v_s, d_index)
     return x_index.apply(lambda x: x*size_g), d_pos
         
@@ -168,7 +176,6 @@ def swarm(x, xsize=0, ysize=0):
     dsize = ysize
     x.sort()
     out = pandas.DataFrame({"x": [item*1.0/dsize for item in x], "y": [0]*len(x)})
-    out = out.sort("x")
     if out.shape[0] > 1:
         for i in range(1, out.shape[0]):
             xi = out["x"].values[i]
@@ -187,7 +194,7 @@ def swarm(x, xsize=0, ysize=0):
                 poty[poty_bad] = numpy.infty
                 abs_poty = [abs(item) for item in poty]
                 newoffset = poty[abs_poty.index(min(abs_poty))]
-                out.loc[i,"y"] = poty[abs_poty.index(min(abs_poty))]
+                out.loc[i,"y"] = newoffset
             else:
                 out.loc[i,"y"] = 0
     out.ix[numpy.isnan(out["x"]), "y"] = numpy.nan
