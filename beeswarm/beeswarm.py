@@ -63,18 +63,27 @@ def beeswarm(values, positions=None, method="swarm",
 
     # Get color vector
     if type(col) == str:
-        colors = [col]*len(yvals)
+        colors = [[col]*len(values[i]) for i in range(len(values))]
     elif type(col) == list:
         if len(col) == len(positions):
             colors = []
             for i in range(len(col)):
-                colors.extend([col[i]]*len(values[i]))
+                colors.append([col[i]]*len(values[i]))
         elif len(col) == len(yvals):
-            colors = col
+            colors = []
+            sofar = 0
+            for i in range(len(values)):
+                colors.append(col[sofar:(sofar+len(values[i]))])
+                sofar = sofar + len(values[i])
         else:
-            colors = col*(len(yvals)/len(col)) # hope for the best
-            if len(colors) < len(yvals):
-                colors.extend(col[0:(len(yvals)-len(colors))])
+            cx = col*(len(yvals)/len(col)) # hope for the best
+            if len(cx) < len(yvals):
+                cx.extend(col[0:(len(yvals)-len(cx))])
+            colors = []
+            sofar = 0
+            for i in range(len(values)):
+                colors.append(cx[sofar:(sofar+len(values[i]))])
+                sofar = sofar + len(values[i])
     else:
         sys.stderr.write("ERROR: Invalid argument for col\n")
         return
@@ -107,17 +116,13 @@ def beeswarm(values, positions=None, method="swarm",
     xsize=math.sqrt(s)*1.0/72*xran*1.0/(w*0.8)
     ysize=math.sqrt(s)*1.0/72*yran*1.0/(h*0.8)
 
-    bs = pandas.DataFrame({"xorig": xvals, "yorig": yvals})
-
     # Get new arrangements
     if method == "swarm":
-        offsets = _beeswarm(positions, values, xsize=xsize, ysize=ysize, method="swarm")
+        bs = _beeswarm(positions, values, xsize=xsize, ysize=ysize, method="swarm", colors=colors)
     else:
-        offsets = _beeswarm(positions, values, ylim=ax.get_ylim(), xsize=xsize, ysize=ysize, method=method)
-    bs = pandas.merge(bs, offsets, on=["xorig","yorig"])
-    bs["color"] = colors
+        bs = _beeswarm(positions, values, ylim=ax.get_ylim(), xsize=xsize, ysize=ysize, method=method, colors=colors)
     # plot
-    ax.scatter(bs["xnew"], bs["ynew"], color=colors)
+    ax.scatter(bs["xnew"], bs["ynew"], color=bs["color"])
     ax.set_xticks(positions)
     if labels is not None:
         ax.set_xticklabels(labels)
@@ -138,7 +143,7 @@ def unsplit(x,f):
         y.ix[f==item,"y"] = x[item]
     return y["y"]
 
-def grid(x, ylim, xsize=0, ysize=0, method="hex"):
+def grid(x, ylim, xsize=0, ysize=0, method="hex", colors="black"):
     """
     Implement the non-swarm arrangement methods
     """
@@ -166,16 +171,17 @@ def grid(x, ylim, xsize=0, ysize=0, method="hex"):
             sys.stderr.write("ERROR: this block should never execute.\n")
             return
     x_index = unsplit(v_s, d_index)
-    return x_index.apply(lambda x: x*size_g), d_pos
+    if type(colors) == str: colors = [colors]*len(x_index)
+    return x_index.apply(lambda x: x*size_g), d_pos, colors
         
-def swarm(x, xsize=0, ysize=0):
+def swarm(x, xsize=0, ysize=0, colors="black"):
     """
     Implement the swarm arrangement method
     """
     gsize = xsize
     dsize = ysize
     x.sort()
-    out = pandas.DataFrame({"x": [item*1.0/dsize for item in x], "y": [0]*len(x)})
+    out = pandas.DataFrame({"x": [item*1.0/dsize for item in x], "y": [0]*len(x), "color": colors})
     if out.shape[0] > 1:
         for i in range(1, out.shape[0]):
             xi = out["x"].values[i]
@@ -198,9 +204,9 @@ def swarm(x, xsize=0, ysize=0):
             else:
                 out.loc[i,"y"] = 0
     out.ix[numpy.isnan(out["x"]), "y"] = numpy.nan
-    return out["y"]*gsize
+    return out["y"]*gsize, out["color"]
 
-def _beeswarm(positions, values, xsize=0, ysize=0, ylim=None, method="swarm"):
+def _beeswarm(positions, values, xsize=0, ysize=0, ylim=None, method="swarm", colors="black"):
     """
     Call the appropriate arrangement method
     """
@@ -208,18 +214,21 @@ def _beeswarm(positions, values, xsize=0, ysize=0, ylim=None, method="swarm"):
     ynew = []
     xorig = []
     yorig = []
+    newcolors = []
     # group y by X
     for i in range(len(positions)):
         xval = positions[i]
         ys = values[i]
+        cs = colors[i]
         if method == "swarm":
-            g_offset = swarm(ys, xsize=xsize, ysize=ysize)
+            g_offset, ncs = swarm(ys, xsize=xsize, ysize=ysize, colors=cs)
             ynew.extend(ys)
         else:
-            g_offset, new_values = grid(ys, xsize=xsize, ysize=ysize, ylim=ylim, method=method)
+            g_offset, new_values, ncs = grid(ys, xsize=xsize, ysize=ysize, ylim=ylim, method=method, colors=cs)
             ynew.extend(new_values)
         xnew.extend([xval+item for item in g_offset])
         yorig.extend(ys)
-        xorig.extend([xval]*len(ys))        
-    out = pandas.DataFrame({"xnew":xnew, "yorig":yorig, "xorig":xorig, "ynew": ynew})
+        xorig.extend([xval]*len(ys))
+        newcolors.extend(ncs)
+    out = pandas.DataFrame({"xnew":xnew, "yorig": yorig, "xorig":xorig, "ynew": ynew, "color": newcolors})
     return out
