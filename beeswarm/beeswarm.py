@@ -1,15 +1,56 @@
 import itertools
 import math
 import matplotlib.pyplot
-import pandas
 import numpy
+import pandas
+import sys
 
 def beeswarm(values, positions=None, method="swarm",
              ax=None, s=20, col="black", xlim=None, ylim=None,
-             labels=None, plot=True):
+             labels=None):
+    """
+    beeswarm(values, positions=None, method="swarm",
+         ax=None, s=20, col="black", xlim=None, ylim=None,
+         labels=None)
+         
+     Inputs:
+         * values: an array of a sequence of vectors
+         * positions: sets the horizontal positions of the swarms.
+            Ticks and labels are set to match the positions.
+            If none, set positions to range(len(values))
+            Default: None
+         * method: how to jitter the x coordinates. Choose from
+            "swarm", "hex", "center", "square"
+            Default: swarm
+         * ax: use this axis for plotting. If none supplied, make a new one
+            Default: None
+         * s: size of points in points^2 (assuming 72 points/inch).
+            Defautt: 20
+         * col: color of points. Can be:
+            - a single string: color all points that color
+            - a vector of strings length len(values): gives color for each group
+            - a vector of strings length sum([len(values[i]) for i in range(len(values))])
+                 gives color for each point
+            - a vector of strings any other length: cycle through the list of colors.
+                 (really pretty if not useful)
+            Default: "black"
+         * xlim: tuple giving (xmin, xmax). If not specified, either get
+             from the supplied ax or recalculate
+         * ylim: tuple giving (ymin, ymax). If not specified, eiterh get
+             from the supplied as or recalculate
+         * labels: list of labels for each group.
+             Default: range(len(values))
+
+     Returns:
+         * bs: pandas.DataFrame with columns: xorig, yorig, xnew, ynew, color
+         * ax: the axis used for plotting
+    """
     if ax is None:
         fig = matplotlib.pyplot.figure()
         ax = fig.add_subplot(111)
+
+    if len(values) == 0: return None
+    if not hasattr(values[0], "__len__"): values = [values]
 
     if positions is None:
         positions = range(len(values))
@@ -68,17 +109,21 @@ def beeswarm(values, positions=None, method="swarm",
         offsets = _beeswarm(positions, values, ylim=ax.get_ylim(), xsize=xsize, ysize=ysize, method=method)
     bs = pandas.merge(bs, offsets, on=["xorig","yorig"])
     bs["color"] = colors
-    # jitter points
-    if plot:
-        ax.scatter(bs["xnew"], bs["ynew"], color=colors)
-        ax.set_xticks(positions)
-        if labels is not None:
-            ax.set_xticklabels(labels)
-    return bs;
+    # plot
+    ax.scatter(bs["xnew"], bs["ynew"], color=colors)
+    ax.set_xticks(positions)
+    if labels is not None:
+        ax.set_xticklabels(labels)
+    return bs, ax;
 
 def unsplit(x,f):
     """
     same as R's unsplit function
+    Read of the values specified in f from x to a vector
+
+    Inputs:
+      x: dictionary of value->[items]
+      f: vector specifying values to be read off to the vector
     """
     y = pandas.DataFrame({"y":[None]*len(f)})
     f = pandas.Series(f)
@@ -88,6 +133,7 @@ def unsplit(x,f):
 
 def grid(x, ylim, xsize=0, ysize=0, method="hex"):
     """
+    Implement the non-swarm arrangement methods
     """
     size_d = ysize
     if method == "hex": size_d = size_d*math.sqrt(3)/2
@@ -114,31 +160,9 @@ def grid(x, ylim, xsize=0, ysize=0, method="hex"):
     x_index = unsplit(v_s, d_index)
     return x_index.apply(lambda x: x*size_g), d_pos
         
-def _beeswarm(positions, values, xsize=0, ysize=0, ylim=None, method="swarm"):
-    """
-    """
-    xnew = []
-    ynew = []
-    xorig = []
-    yorig = []
-    # group y by X
-    for i in range(len(positions)):
-        xval = positions[i]
-        ys = values[i]
-        if method == "swarm":
-            g_offset = swarm(ys, xsize=xsize, ysize=ysize)
-            ynew.extend(ys)
-        else:
-            g_offset, new_values = grid(ys, xsize=xsize, ysize=ysize, ylim=ylim, method=method)
-            ynew.extend(new_values)
-        xnew.extend([xval+item for item in g_offset])
-        yorig.extend(ys)
-        xorig.extend([xval]*len(ys))        
-    out = pandas.DataFrame({"xnew":xnew,"yorig":yorig,"xorig":xorig,"ynew": ynew})
-    return out
-
 def swarm(x, xsize=0, ysize=0):
     """
+    Implement the swarm arrangement method
     """
     gsize = xsize
     dsize = ysize
@@ -168,3 +192,27 @@ def swarm(x, xsize=0, ysize=0):
                 out.loc[i,"y"] = 0
     out.ix[numpy.isnan(out["x"]), "y"] = numpy.nan
     return out["y"]*gsize
+
+def _beeswarm(positions, values, xsize=0, ysize=0, ylim=None, method="swarm"):
+    """
+    Call the appropriate arrangement method
+    """
+    xnew = []
+    ynew = []
+    xorig = []
+    yorig = []
+    # group y by X
+    for i in range(len(positions)):
+        xval = positions[i]
+        ys = values[i]
+        if method == "swarm":
+            g_offset = swarm(ys, xsize=xsize, ysize=ysize)
+            ynew.extend(ys)
+        else:
+            g_offset, new_values = grid(ys, xsize=xsize, ysize=ysize, ylim=ylim, method=method)
+            ynew.extend(new_values)
+        xnew.extend([xval+item for item in g_offset])
+        yorig.extend(ys)
+        xorig.extend([xval]*len(ys))        
+    out = pandas.DataFrame({"xnew":xnew, "yorig":yorig, "xorig":xorig, "ynew": ynew})
+    return out
