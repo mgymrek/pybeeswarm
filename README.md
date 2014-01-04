@@ -81,4 +81,4 @@ d2 = np.random.normal(size=100)
 bs, ax = beeswarm([d1,d2], method="swarm", labels=["sample 1", "sample 2"], col=["blue","red"])
 ```
 
-More details [here](http://melissagymrek.com/blog/2014/01/04/python-beeswarm.html). View more examples [here](http://nbviewer.ipython.org/github/mgymrek/pybeeswarm/blob/master/tests.ipynb?create=1).
+More details [here](http://melissagymrek.com/python/2014/01/04/python-beeswarm.html). View more examples [here](http://nbviewer.ipython.org/github/mgymrek/pybeeswarm/blob/master/tests.ipynb?create=1).
