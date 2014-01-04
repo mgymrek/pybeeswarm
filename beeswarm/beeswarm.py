@@ -6,7 +6,7 @@ import numpy
 
 def beeswarm(values, positions=None, method="swarm",
              ax=None, s=20, col="black", xlim=None, ylim=None,
-             plot=True):
+             labels=None, plot=True):
     if ax is None:
         fig = matplotlib.pyplot.figure()
         ax = fig.add_subplot(111)
@@ -59,34 +59,82 @@ def beeswarm(values, positions=None, method="swarm",
         sys.stderr.write("ERROR: Invalid argument for col\n")
         return
 
-    
-    bs = pandas.DataFrame({"xorig": xvals, "y": yvals})
-    bs = pandas.merge(bs, _beeswarm(positions, values, xsize=xsize, ysize=ysize), on=["xorig","y"])
+    bs = pandas.DataFrame({"xorig": xvals, "yorig": yvals})
+
+    # Get new arrangements
+    if method == "swarm":
+        offsets = _beeswarm(positions, values, xsize=xsize, ysize=ysize, method="swarm")
+    else:
+        offsets = _beeswarm(positions, values, ylim=ax.get_ylim(), xsize=xsize, ysize=ysize, method=method)
+    bs = pandas.merge(bs, offsets, on=["xorig","yorig"])
     bs["color"] = colors
     # jitter points
     if plot:
-        ax.scatter(bs["xnew"], bs["y"], color=colors)
+        ax.scatter(bs["xnew"], bs["ynew"], color=colors)
+        ax.set_xticks(positions)
+        if labels is not None:
+            ax.set_xticklabels(labels)
     return bs;
 
-def _beeswarm(positions, values, method="swarm", xsize=0, ysize=0):
+def unsplit(x,f):
+    """
+    same as R's unsplit function
+    """
+    y = pandas.DataFrame({"y":[None]*len(f)})
+    f = pandas.Series(f)
+    for item in set(f):
+        y.ix[f==item,"y"] = x[item]
+    return y["y"]
+
+def grid(x, ylim, xsize=0, ysize=0, method="hex"):
+    """
+    """
+    size_d = ysize
+    if method == "hex": size_d = size_d*math.sqrt(3)/2
+    size_g = xsize
+    breaks = numpy.arange(ylim[0], ylim[1]+size_d, size_d)
+    mids = (pandas.Series(breaks[:-1]) + pandas.Series(breaks[1:]))*1.0/2
+    d_index = pandas.Series(pandas.cut(pandas.Series(x), bins=breaks, labels=False))
+    d_pos = d_index.apply(lambda x: mids[x])
+    v_s = {}
+    for item in set(d_index):
+        odd_row = (item%2)==1
+        vals = range(list(d_index).count(item))
+        if method == "center":
+            v_s[item] = map(lambda a: a - numpy.mean(vals), vals)
+        elif method == "square":
+            v_s[item] = map(lambda a: a - math.floor(numpy.mean(vals)), vals)
+        elif method == "hex":
+            if odd_row:
+                v_s[item] = map(lambda a: a - math.floor(numpy.mean(vals)) - 0.25, vals)
+            else:
+                v_s[item] = map(lambda a: a - math.ceil(numpy.mean(vals)) + 0.25, vals)
+        else:
+            sys.stderr.write("ERROR: Invalid method.")
+    x_index = unsplit(v_s, d_index)
+    return x_index.apply(lambda x: x*size_g), d_pos
+        
+def _beeswarm(positions, values, xsize=0, ysize=0, ylim=None, method="swarm"):
     """
     """
     xnew = []
     ynew = []
     xorig = []
-    if method == "swarm":
-        # group y by X
-        for i in range(len(positions)):
-            xval = positions[i]
-            ys = values[i]
-            g_offset = (swarm(ys, xsize=xsize, ysize=ysize))
-            xnew.extend([xval+item for item in g_offset])
+    yorig = []
+    # group y by X
+    for i in range(len(positions)):
+        xval = positions[i]
+        ys = values[i]
+        if method == "swarm":
+            g_offset = swarm(ys, xsize=xsize, ysize=ysize)
             ynew.extend(ys)
-            xorig.extend([xval]*len(ys))
-    else:
-        xnew = None # not implemented
-        ynew = None
-    out = pandas.DataFrame({"xnew":xnew,"y":ynew,"xorig":xorig})
+        else:
+            g_offset, new_values = grid(ys, xsize=xsize, ysize=ysize, ylim=ylim, method=method)
+            ynew.extend(new_values)
+        xnew.extend([xval+item for item in g_offset])
+        yorig.extend(ys)
+        xorig.extend([xval]*len(ys))        
+    out = pandas.DataFrame({"xnew":xnew,"yorig":yorig,"xorig":xorig,"ynew": ynew})
     return out
 
 def swarm(x, xsize=0, ysize=0):
