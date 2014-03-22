@@ -8,7 +8,7 @@ AUTHOR_EMAIL = "mgymrek@mit.edu"
 MAINTAINER = "Melissa Gymrek"
 MAINTAINER_EMAIL = "mgymrek@mit.edu"
 DOWNLOAD_URL = 'https://github.com/mgymrek/pybeeswarm'
-LICENSE = 'BSD'
+LICENSE = 'MIT'
 
 VERSION = '0.0.1'
 
