@@ -146,7 +146,7 @@ def beeswarm(values, positions=None, method="swarm",
     else:
         bs = _beeswarm(positions, values, ylim=ax.get_ylim(), xsize=xsize, ysize=ysize, method=method, colors=colors)
     # plot
-    ax.scatter(bs["xnew"], bs["ynew"], color=list(bs["color"]), **kwargs)
+    ax.scatter(bs["xnew"], bs["ynew"], c=list(bs["color"]), **kwargs)
     ax.set_xticks(positions)
     if labels is not None:
         ax.set_xticklabels(labels)
@@ -204,7 +204,6 @@ def swarm(x, xsize=0, ysize=0, colors="black"):
     """
     gsize = xsize
     dsize = ysize
-    x = x.copy()
     x.sort()
     out = pandas.DataFrame({"x": [item*1.0/dsize for item in x], "y": [0]*len(x), "color": colors})
     if out.shape[0] > 1:
