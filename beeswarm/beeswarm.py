@@ -204,6 +204,7 @@ def swarm(x, xsize=0, ysize=0, colors="black"):
     """
     gsize = xsize
     dsize = ysize
+    x = x.copy()
     x.sort()
     out = pandas.DataFrame({"x": [item*1.0/dsize for item in x], "y": [0]*len(x), "color": colors})
     if out.shape[0] > 1:
