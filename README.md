@@ -8,7 +8,7 @@ To install, simply do:
 ```
 git clone https://github.com/mgymrek/pybeeswarm.git
 cd pybeeswarm
-sudo setup.py install
+sudo python setup.py install
 ```
 
 To test that it worked, open up python and check that ```import beeswarm``` doesn't give you any errors.

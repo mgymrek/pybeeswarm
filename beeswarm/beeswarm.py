@@ -31,7 +31,7 @@ import sys
 
 def beeswarm(values, positions=None, method="swarm",
              ax=None, s=20, col="black", xlim=None, ylim=None,
-             labels=None):
+             labels=None, **kwargs):
     """
     beeswarm(values, positions=None, method="swarm",
          ax=None, s=20, col="black", xlim=None, ylim=None,
@@ -146,7 +146,7 @@ def beeswarm(values, positions=None, method="swarm",
     else:
         bs = _beeswarm(positions, values, ylim=ax.get_ylim(), xsize=xsize, ysize=ysize, method=method, colors=colors)
     # plot
-    ax.scatter(bs["xnew"], bs["ynew"], color=list(bs["color"]))
+    ax.scatter(bs["xnew"], bs["ynew"], color=list(bs["color"]), **kwargs)
     ax.set_xticks(positions)
     if labels is not None:
         ax.set_xticklabels(labels)
