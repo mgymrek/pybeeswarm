@@ -2,7 +2,7 @@ from setuptools import setup
 
 DESCRIPTION = "Beeswarm plots for python"
 LONG_DESCRIPTION = DESCRIPTION
-NAME = "beeswarm"
+NAME = "pybeeswarm"
 AUTHOR = "Melissa Gymrek"
 AUTHOR_EMAIL = "mgymrek@mit.edu"
 MAINTAINER = "Melissa Gymrek"
