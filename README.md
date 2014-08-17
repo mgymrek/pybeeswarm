@@ -4,7 +4,13 @@ pybeeswarm
 Beeswarm plots for python. Inspired by [R beeswarm plots](http://www.cbs.dtu.dk/~eklund/beeswarm/)
 
 ## Install ##
-To install, simply do:
+The easiest way to install pybeeswarm is using pip:
+
+```
+sudo pip install pybeeswarm
+```
+
+To install the latest version on github, simply do:
 ```
 git clone https://github.com/mgymrek/pybeeswarm.git
 cd pybeeswarm
