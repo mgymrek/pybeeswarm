@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup
 
 DESCRIPTION = "Beeswarm plots for python"
 LONG_DESCRIPTION = DESCRIPTION
@@ -10,7 +10,7 @@ MAINTAINER_EMAIL = "mgymrek@mit.edu"
 DOWNLOAD_URL = 'https://github.com/mgymrek/pybeeswarm'
 LICENSE = 'MIT'
 
-VERSION = '0.0.1'
+VERSION = '1.0.0'
 
 setup(name=NAME,
       version=VERSION,
@@ -24,4 +24,12 @@ setup(name=NAME,
       download_url=DOWNLOAD_URL,
       license=LICENSE,
       packages=['beeswarm'],
+      package_dir={'beeswarm': 'beeswarm'},
+      install_requires=['matplotlib','numpy','pandas'],
+      classifiers=['Development Status :: 4 - Beta',\
+                       'Programming Language :: Python :: 2.7',\
+                       'License :: OSI Approved :: MIT License',\
+                       'Operating System :: OS Independent',\
+                       'Intended Audience :: Science/Research',\
+                       'Topic :: Scientific/Engineering :: Visualization']
      )
