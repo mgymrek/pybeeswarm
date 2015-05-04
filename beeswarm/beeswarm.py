@@ -31,12 +31,12 @@ import sys
 
 def beeswarm(values, positions=None, method="swarm",
              ax=None, s=20, col="black", xlim=None, ylim=None,
-             labels=None, **kwargs):
+             labels=None, labelrotation="vertical", **kwargs):
     """
     beeswarm(values, positions=None, method="swarm",
          ax=None, s=20, col="black", xlim=None, ylim=None,
          labels=None)
-         
+
      Inputs:
          * values: an array of a sequence of vectors
          * positions: sets the horizontal positions of the swarms.
@@ -64,6 +64,8 @@ def beeswarm(values, positions=None, method="swarm",
              from the supplied as or recalculate
          * labels: list of labels for each group.
              Default: range(len(values))
+         * labelrotation: rotation of x label.
+             Default: "vertical"
 
      Returns:
          * bs: pandas.DataFrame with columns: xorig, yorig, xnew, ynew, color
@@ -78,7 +80,7 @@ def beeswarm(values, positions=None, method="swarm",
     if positions is None:
         positions = range(len(values))
     else:
-        if len(positions) != len(values): 
+        if len(positions) != len(values):
             sys.stderr.write("ERROR: number of positions must match number of groups\n")
             return None
 
@@ -124,7 +126,7 @@ def beeswarm(values, positions=None, method="swarm",
         xmax = max(positions)+0.1*xx
         ax.set_xlim(left=xmin, right=xmax)
     if ylim is not None:
-        ax.set_ylim(bottom=ylim[0], top=ylim[1])   
+        ax.set_ylim(bottom=ylim[0], top=ylim[1])
     else:
         yy = max(yvals) - min(yvals)
         ymin = min(yvals)-.05*yy
@@ -149,7 +151,7 @@ def beeswarm(values, positions=None, method="swarm",
     ax.scatter(bs["xnew"], bs["ynew"], c=list(bs["color"]), **kwargs)
     ax.set_xticks(positions)
     if labels is not None:
-        ax.set_xticklabels(labels)
+        ax.set_xticklabels(labels, rotation=labelrotation)
     return bs, ax
 
 def unsplit(x,f):
@@ -197,7 +199,7 @@ def grid(x, ylim, xsize=0, ysize=0, method="hex", colors="black"):
     x_index = unsplit(v_s, d_index)
     if type(colors) == str: colors = [colors]*len(x_index)
     return x_index.apply(lambda x: x*size_g), d_pos, colors
-        
+
 def swarm(x, xsize=0, ysize=0, colors="black"):
     """
     Implement the swarm arrangement method
