@@ -185,14 +185,14 @@ def grid(x, ylim, xsize=0, ysize=0, method="hex", colors="black"):
         odd_row = (item%2)==1
         vals = range(list(d_index).count(item))
         if method == "center":
-            v_s[item] = map(lambda a: a - numpy.mean(vals), vals)
+            v_s[item] = list(map(lambda a: a - numpy.mean(vals), vals))
         elif method == "square":
-            v_s[item] = map(lambda a: a - math.floor(numpy.mean(vals)), vals)
+            v_s[item] = list(map(lambda a: a - math.floor(numpy.mean(vals)), vals))
         elif method == "hex":
             if odd_row:
-                v_s[item] = map(lambda a: a - math.floor(numpy.mean(vals)) - 0.25, vals)
+                v_s[item] = list(map(lambda a: a - math.floor(numpy.mean(vals)) - 0.25, vals))
             else:
-                v_s[item] = map(lambda a: a - math.ceil(numpy.mean(vals)) + 0.25, vals)
+                v_s[item] = list(map(lambda a: a - math.ceil(numpy.mean(vals)) + 0.25, vals))
         else:
             sys.stderr.write("ERROR: this block should never execute.\n")
             return
