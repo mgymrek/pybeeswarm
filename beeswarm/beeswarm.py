@@ -206,8 +206,8 @@ def swarm(x, xsize=0, ysize=0, colors="black"):
     """
     gsize = xsize
     dsize = ysize
-    x.sort()
     out = pandas.DataFrame({"x": [item*1.0/dsize for item in x], "y": [0]*len(x), "color": colors})
+    out.sort_index(by='x', inplace=True)
     if out.shape[0] > 1:
         for i in range(1, out.shape[0]):
             xi = out["x"].values[i]
