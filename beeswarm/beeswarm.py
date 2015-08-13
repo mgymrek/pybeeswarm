@@ -206,7 +206,7 @@ def swarm(x, xsize=0, ysize=0, colors="black"):
     """
     gsize = xsize
     dsize = ysize
-    out = pandas.DataFrame({"x": [item*1.0/dsize for item in x], "y": [0]*len(x), "color": colors})
+    out = pandas.DataFrame({"x": [item*1.0/dsize for item in x], "y": [0]*len(x), "color": colors, "order": range(len(x))})
     out.sort_index(by='x', inplace=True)
     if out.shape[0] > 1:
         for i in range(1, out.shape[0]):
@@ -230,6 +230,8 @@ def swarm(x, xsize=0, ysize=0, colors="black"):
             else:
                 out.loc[i,"y"] = 0
     out.ix[numpy.isnan(out["x"]), "y"] = numpy.nan
+    # Sort to maintain original order
+    out.sort_index(by="order", inplace=True)
     return out["y"]*gsize, out["color"]
 
 def _beeswarm(positions, values, xsize=0, ysize=0, ylim=None, method="swarm", colors="black"):
