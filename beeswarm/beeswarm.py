@@ -213,7 +213,7 @@ def swarm(x, xsize=0, ysize=0, colors="black"):
             xi = out["x"].values[i]
             yi = out["y"].values[i]
             pre =  out[0:i] # previous points
-            wh = ((xi-pre["x"]) < 1) # which are potentially overlapping
+            wh = (abs(xi-pre["x"]) < 1) # which are potentially overlapping
             if any(wh):
                 pre = pre[wh]
                 poty_off = pre["x"].apply(lambda x: math.sqrt(1-(xi-x)**2)) # potential y offset
