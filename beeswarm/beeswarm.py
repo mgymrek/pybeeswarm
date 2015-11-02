@@ -58,6 +58,7 @@ def beeswarm(values, positions=None, method="swarm",
             - a vector of strings any other length: cycle through the list of colors.
                  (really pretty if not useful)
             Default: "black"
+            Note, colors can also be rgb tubples instead of strings.
          * xlim: tuple giving (xmin, xmax). If not specified, either get
              from the supplied ax or recalculate
          * ylim: tuple giving (ymin, ymax). If not specified, eiterh get
